@@ -24,7 +24,9 @@
 
 #ifndef BUFFER_H
 #define BUFFER_H
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 // structure/typdefs
 
 //! cBuffer structure
@@ -60,10 +62,14 @@ unsigned char	bufferIsNotFull(cBuffer* buffer);
 //! flush (clear) the contents of the buffer
 void			bufferFlush(cBuffer* buffer);
 
-unsigned char bufferGetNumber(cBuffer* buffer);
+unsigned short bufferGetNumber(cBuffer* buffer);
 
 // Reset the Ringbuffer pointer:
 void bufferReset(cBuffer* buffer);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 //@}

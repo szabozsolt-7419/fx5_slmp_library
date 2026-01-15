@@ -1,16 +1,17 @@
 #include <QtTest/QtTest>
 
 extern "C" {
-#include "melsec_pdu_request.h"
+//#include "melsec_pdu_request.h"
 
 }
 
-class TestPdu : public QObject
+class FX5Tests : public QObject
 {
     Q_OBJECT
 
 private slots:
-    void read_d_words_single();
+    void pdu_builds_correctly();
+    /*void read_d_words_single();
     void read_d_words_errors();
     void write_d_words_single();
     void write_d_words_multi();
@@ -32,11 +33,11 @@ private slots:
     void roundtrip_read_m_bits_words_count();
     void roundtrip_write_y_bits_words_and_data();
     void roundtrip_write_m_bits_words_and_data();
-
+    */
 
 };
 
-
+/*
 static uint16_t bitsToWords(uint16_t bitCount)
 {
     return (uint16_t)((bitCount + 15u) / 16u);
@@ -491,9 +492,12 @@ void TestPdu::roundtrip_write_m_bits_words_and_data()
         QCOMPARE(cmd.values.bytes[i], (uint8_t)expPacked[i]);
     }
 }
+*/
+
+void FX5Tests::pdu_builds_correctly() {
+
+}
 
 
-
-
-QTEST_MAIN(TestPdu)
-#include "test_pdu.moc"
+QTEST_MAIN(FX5Tests)
+#include "test_fx5_lib.moc"

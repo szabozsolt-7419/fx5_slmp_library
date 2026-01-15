@@ -95,7 +95,7 @@ void bufferFlush(cBuffer* buffer)
 	buffer->datalength = 0;
 }
 
-unsigned char bufferGetNumber(cBuffer* buffer)
+unsigned short bufferGetNumber(cBuffer* buffer)
 {
 	return (buffer->datalength);
 }

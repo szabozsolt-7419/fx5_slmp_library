@@ -27,6 +27,14 @@ extern "C" {
 //Legfeljebb ennyi eszköz írását/olvasását támogatjuk egy tranzakció során
 #define FX5_MAX_VALUE_COUNT (32)
 
+#define FX5_RESPONSE_OK (0x0000)
+
+#define FX5_BIT_TRUE 0x00FFu
+#define FX5_BIT_FALSE 0x0000u
+
+
+//Ha ennyi byte-ot eldobott a parser, és nem találta meg a frame elejét, akkor visszatér ERR_RESYNC-el
+#define FX5_RESYNC_LIMIT (64)
 /*
  * Eszköz típusok
  */
@@ -124,8 +132,11 @@ typedef struct fx5_response {
 } fx5_response_t;
 
 typedef struct fx5_transaction {
+    uint32_t next_serial;
+    uint16_t resync_counter;
     fx5_request_t request;
     fx5_response_t response;
+    uint32_t serial;
     fx5_wire_settings_t wire_settings;
 } fx5_transaction_t;
 
@@ -136,7 +147,11 @@ typedef enum {
     FX5_ST_ERR_NEED_MORE, /**< A bejövő ringbuffer-ben még nincs meg a teljes válasz **/
     FX5_ST_ERR_INVALID_ADDRESS,   /**< Hibás cím **/
     FX5_ST_ERR_INVALID_COUNT, /**< Hibás az olvasandó/írandó eszközök száma **/
-    FX5_ST_ERR_UNSUPPORTED /**< Nem támogatott parancs **/
+    FX5_ST_ERR_UNSUPPORTED, /**< Nem támogatott funkció / parancs **/
+    FX5_ST_ERR_INTERNAL, /**< Belső ellenőrzési hiba (nem stimmel a tényleges és a számított csomag méret) **/
+    FX5_ST_ERR_SERIAL_MISMATCH, /**< Nem stimmel a sorozatszám TCP protokollnál **/
+    FX5_ST_RESPONSE_ERROR,  /**< Hibakódot kaptunk vissza válaszként **/
+    FX5_ST_ERR_RESYNC /**< Túl sok byte-ot kellett eldobni, nem akarunk végtelen ciklust **/
 } fx5_status_t;
 
 
@@ -157,6 +172,12 @@ fx5_status_t fx5_build_request(fx5_transaction_t *transaction, uint8_t *buffer, 
  * Ha hibás a frame formátum, akkor resync-elni kezd, addig dobál byte-okat, amíg talál egy frame kezdetet, vagy amíg van adat a ringbufferben.
  */
 fx5_status_t fx5_parse_response(fx5_transaction_t *transaction,cBuffer *rx_buffer);
+
+
+/*
+ * Inicializálja a tranzakciót az első használat előtt
+ */
+void fx5_transaction_init(fx5_transaction_t *transaction);
 
 /*
  * Első használat előtt inicializálni kell a beállításokat.
