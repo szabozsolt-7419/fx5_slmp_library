@@ -1,0 +1,127 @@
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+
+PROJECT_NAME           = "FX5 communication library"
+PROJECT_BRIEF          = "Minimal FX5 (MELSEC) PDU + wire helpers for MCU use"
+OUTPUT_DIRECTORY       = build/docs
+CREATE_SUBDIRS         = YES
+
+# Use README.md as main page
+USE_MDFILE_AS_MAINPAGE = README.md
+
+# If you want a version shown in the docs, you can set this from CMake later
+PROJECT_NUMBER         =
+
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+
+OPTIMIZE_OUTPUT_FOR_C  = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+
+# Generate only what we need
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_XML           = NO
+
+# If you later want MkDocs/Sphinx integration, turn this on:
+# GENERATE_XML         = YES
+
+#---------------------------------------------------------------------------
+# Input configuration
+#---------------------------------------------------------------------------
+
+INPUT                  = README.md include src docs
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h *.c *.cpp *.md
+
+# Exclude build artifacts
+EXCLUDE                = build .git
+
+#---------------------------------------------------------------------------
+# Extraction configuration
+#---------------------------------------------------------------------------
+
+# Start strict-ish but not painful
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = NO
+EXTRACT_ANON_NSPACES   = NO
+
+# Document only what you comment
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+
+# Warn, but don't fail builds initially
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_AS_ERROR          = NO
+
+# Better short comments behavior
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MULTILINE_CPP_IS_BRIEF = YES
+INHERIT_DOCS           = YES
+
+#---------------------------------------------------------------------------
+# HTML output
+#---------------------------------------------------------------------------
+
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+GENERATE_TREEVIEW      = YES
+DISABLE_INDEX          = NO
+SEARCHENGINE           = YES
+
+# If you want a nicer look later, consider m.css theme (optional)
+
+#---------------------------------------------------------------------------
+# Source browsing / references
+#---------------------------------------------------------------------------
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+VERBATIM_HEADERS       = YES
+
+#---------------------------------------------------------------------------
+# Graphs (optional - requires Graphviz 'dot')
+#---------------------------------------------------------------------------
+
+HAVE_DOT               = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+CLASS_GRAPH            = NO
+INCLUDE_GRAPH          = NO
+INCLUDED_BY_GRAPH      = NO
+
+# If Graphviz is installed and you want graphs:
+# HAVE_DOT             = YES
+# DOT_IMAGE_FORMAT     = svg
+# CLASS_GRAPH          = YES
+# INCLUDE_GRAPH        = YES
+# INCLUDED_BY_GRAPH    = YES
+
+#---------------------------------------------------------------------------
+# Preprocessor
+#---------------------------------------------------------------------------
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+EXPAND_ONLY_PREDEF     = NO
+
+# If you use export macros later, you can predefine here:
+# PREDEFINED           = FX5_API=
+
+#---------------------------------------------------------------------------
+# Misc
+#---------------------------------------------------------------------------
+
+QUIET                  = NO
