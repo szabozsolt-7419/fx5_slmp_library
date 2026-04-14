@@ -1,58 +1,80 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(fx5_simple_c_library LANGUAGES CXX C)
+project(fx5_simple_c_library VERSION 0.1.0 LANGUAGES C)
 
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test Network)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test Network)
-
+enable_testing()
 
 add_library(fx5_lib STATIC
-  include/fx5.h
-  src/fx5_private.h
-  src/fx5_utility.h    
-  src/buffer.c
-  include/buffer.h
-  src/fx5.c
+  include/fx5/fx5.h
+  include/fx5/internal/fx5_private.h
+  include/fx5/internal/fx5_utility.h  
+  src/fx5_core.c
+  src/fx5_request.c
+  src/fx5_response.c
+  include/fx5/fx5_ringbuf.h
+  src/fx5_ringbuf.c
+  include/fx5/fx5_layout.h
+)
+
+target_sources(fx5_lib PRIVATE
+  README.md
+  Doxyfile
+  LICENSE
+)
+
+
+target_compile_definitions(fx5_lib
+    PUBLIC
+        FX5_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+        FX5_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+        FX5_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+)
+
+target_include_directories(fx5_lib
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 add_custom_target(docs
-    COMMAND doxygen ${CMAKE_SOURCE_DIR}/Doxyfile
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND doxygen ${CMAKE_SOURCE_DIR}/Doxyfile
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+# --- Unity tests -------------------------------------------------------------
+
+add_executable(fx5_tests
+  tests/test_main.c
+  tests/test_fx5_pdu_vectors.c
+  tests/test_fx5_vectors.h
+  tests/unity/unity.c
+  tests/unity/unity.h
+  tests/unity/unity_internals.h
+  tests/test_fx5_parser_vectors.c
+  tests/test_fx5_edge_cases.c
+  tests/test_support.h
+
+)
+
+target_include_directories(fx5_tests
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unity
+)
+
+target_link_libraries(fx5_tests
+  PRIVATE
+    fx5_lib
 )
 
 
-target_include_directories(fx5_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_test(NAME fx5_tests COMMAND fx5_tests)
 
-add_executable(fx5uemulator
-  README.md
-  src/fx5uemulator.cpp
-  src/fx5uemulator.h  
-  src/plc.h
-  src/buffer.c
-  include/buffer.h
-  src/main.cpp
-  src/fx5tester.h
-  src/fx5tester.cpp
-)
 
-target_include_directories(fx5uemulator PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_link_libraries(fx5uemulator PRIVATE Qt${QT_VERSION_MAJOR}::Core fx5_lib Qt${QT_VERSION_MAJOR}::Network)
+option(FX5_BUILD_TOOLS "Build command-line tools" ON)
 
-# --- tests ---
-enable_testing()
+if (FX5_BUILD_TOOLS)
+  add_subdirectory(tools/fx5_client)
 
-add_executable(fx5_lib_tests
-  src/test_fx5_lib.cpp
-)
-target_link_libraries(fx5_lib_tests PRIVATE Qt${QT_VERSION_MAJOR}::Test fx5_lib )
-
-add_test(NAME fx5_lib_tests COMMAND fx5_lib_tests)
-
+ endif()
 
