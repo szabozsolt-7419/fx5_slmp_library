@@ -55,7 +55,7 @@
 
 
 /** @brief Maximum payload size stored in the internal transaction buffer. */
-#define FX5_TX_MAX_PAYLOAD_BYTES             ((uint16_t)(FX5_MAX_VALUE_COUNT * 2u))
+#define FX5_TX_MAX_PAYLOAD_BYTES             FX5_MAX_BIT_PAYLOAD_BYTES
 /** @brief Internal transaction buffer size. */
 #define FX5_IOBUF_SIZE     ((uint16_t)(FX5_REQ_TCP_HEADER_SIZE_4E + FX5_REQ_PDU_HEADER_SIZE + FX5_TX_MAX_PAYLOAD_BYTES + FX5_IOBUF_GUARD_BYTES))
 
@@ -85,7 +85,7 @@ struct fx5_context {
     uint16_t count;                         /**< Logical request or response value count. */
 
     uint16_t response_code;                 /**< Last parsed PLC response code. */
-    uint16_t values[FX5_MAX_VALUE_COUNT];   /**< Shared logical value array for request and response data. */
+    uint16_t values[FX5_MAX_VALUE_COUNT];   /**< Shared value storage; bit devices pack 16 logical bits per slot. */
 
     uint8_t buffer[FX5_IOBUF_SIZE];         /**< Internal receive buffer storage. */
     fx5_ringbuf_t rx_cbuffer;                     /**< Circular buffer view over @ref buffer. */

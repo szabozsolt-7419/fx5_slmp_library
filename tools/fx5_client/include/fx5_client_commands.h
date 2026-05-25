@@ -14,7 +14,7 @@
 #include "fx5_client_config.h"
 
 
-#define FX5_CLIENT_MAX_VALUES 256u
+#define FX5_CLIENT_MAX_VALUES FX5_MAX_BIT_VALUE_COUNT
 
 /**
  * @brief Supported command types in the interactive client.

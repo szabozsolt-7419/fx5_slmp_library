@@ -28,12 +28,15 @@ void test_parse_response_resyncs_after_leading_garbage(void);
 
 void test_build_request_rejects_invalid_address(void);
 void test_build_request_rejects_zero_count(void);
+void test_set_request_uses_separate_word_and_bit_limits(void);
 void test_set_write_value_rejects_out_of_range_index(void);
+void test_bit_write_accepts_max_bit_index(void);
 void test_build_request_rejects_too_small_output_buffer(void);
 void test_build_request_accepts_extended_fx5_devices(void);
 void test_build_request_rejects_writes_to_read_only_devices(void);
 void test_parse_response_returns_error_on_nonzero_end_code(void);
 void test_parse_bit_response_keeps_requested_odd_count(void);
+void test_parse_bit_response_accepts_max_bit_count(void);
 void test_parse_word_response_rejects_short_payload(void);
 void test_parse_word_response_rejects_long_payload(void);
 void test_parse_bit_write_ok_response_has_zero_response_count(void);
@@ -61,12 +64,15 @@ int main(void)
 
     RUN_TEST(test_build_request_rejects_invalid_address);
     RUN_TEST(test_build_request_rejects_zero_count);
+    RUN_TEST(test_set_request_uses_separate_word_and_bit_limits);
     RUN_TEST(test_set_write_value_rejects_out_of_range_index);
+    RUN_TEST(test_bit_write_accepts_max_bit_index);
     RUN_TEST(test_build_request_rejects_too_small_output_buffer);
     RUN_TEST(test_build_request_accepts_extended_fx5_devices);
     RUN_TEST(test_build_request_rejects_writes_to_read_only_devices);
     RUN_TEST(test_parse_response_returns_error_on_nonzero_end_code);
     RUN_TEST(test_parse_bit_response_keeps_requested_odd_count);
+    RUN_TEST(test_parse_bit_response_accepts_max_bit_count);
     RUN_TEST(test_parse_word_response_rejects_short_payload);
     RUN_TEST(test_parse_word_response_rejects_long_payload);
     RUN_TEST(test_parse_bit_write_ok_response_has_zero_response_count);

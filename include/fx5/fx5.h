@@ -37,21 +37,35 @@ extern "C" {
 
 /**
  * @def FX5_MAX_VALUE_COUNT
- * @brief Maximum number of logical values stored in a context.
+ * @brief Number of 16-bit value storage slots in a context.
  *
- * This limit applies to both write payload values and parsed response values.
  * It is a compile-time storage limit of this library, not an SLMP or FX5 PLC
- * protocol limit. fx5_set_request() rejects requests whose @p count is greater
- * than this value.
+ * protocol limit.
+ *
+ * For word devices, one storage slot stores one logical value. For bit devices,
+ * one storage slot stores 16 logical bit values, so the maximum bit-device
+ * request count is @ref FX5_MAX_BIT_VALUE_COUNT.
  *
  * The default keeps each context small for embedded/static allocation use.
  * Define FX5_MAX_VALUE_COUNT before including this header, or pass a compiler
  * definition such as -DFX5_MAX_VALUE_COUNT=128, to trade more RAM for larger
- * batch read/write transactions.
+ * word and bit batch read/write transactions.
  */
 #ifndef FX5_MAX_VALUE_COUNT
 #define FX5_MAX_VALUE_COUNT (32u)
 #endif
+
+/** @brief Maximum logical values per word-device transaction. */
+#define FX5_MAX_WORD_VALUE_COUNT (FX5_MAX_VALUE_COUNT)
+
+/** @brief Maximum logical values per bit-device transaction. */
+#define FX5_MAX_BIT_VALUE_COUNT  ((uint16_t)(FX5_MAX_VALUE_COUNT * 16u))
+
+/** @brief Maximum word-device payload bytes stored by one context. */
+#define FX5_MAX_WORD_PAYLOAD_BYTES ((uint16_t)(FX5_MAX_WORD_VALUE_COUNT * 2u))
+
+/** @brief Maximum bit-device payload bytes stored by one context. */
+#define FX5_MAX_BIT_PAYLOAD_BYTES  ((uint16_t)((FX5_MAX_BIT_VALUE_COUNT + 1u) / 2u))
 
 /**
  * @def FX5_CONTEXT_POOL_SIZE
@@ -72,7 +86,7 @@ extern "C" {
  * fx5_build_request().
  */
 #define FX5_MAX_REQUEST_SIZE \
-(FX5_REQ_TCP_HEADER_SIZE_4E + FX5_REQ_PDU_HEADER_SIZE + (FX5_MAX_VALUE_COUNT * 2u) + FX5_IOBUF_GUARD_BYTES)
+(FX5_REQ_TCP_HEADER_SIZE_4E + FX5_REQ_PDU_HEADER_SIZE + FX5_MAX_BIT_PAYLOAD_BYTES + FX5_IOBUF_GUARD_BYTES)
 
 
 /** @brief Successful FX5 response code. */
@@ -334,9 +348,10 @@ fx5_status_t fx5_set_monitoring_timer(fx5_context_t *ctx,
  * and logical value count. For write requests, individual payload values
  * may then be set with fx5_set_write_value().
  *
- * @p count is limited by @ref FX5_MAX_VALUE_COUNT. This is a library storage
- * limit caused by the fixed-size value array in each context. It should not be
- * interpreted as the maximum batch size supported by the PLC or by SLMP.
+ * @p count is limited by @ref FX5_MAX_WORD_VALUE_COUNT for word devices and
+ * @ref FX5_MAX_BIT_VALUE_COUNT for bit devices. These are library storage
+ * limits caused by the fixed-size value array in each context. They should not
+ * be interpreted as maximum batch sizes supported by the PLC or by SLMP.
  *
  * @param[in] ctx Context handle.
  * @param[in] command Command code.
@@ -354,8 +369,9 @@ fx5_status_t fx5_set_request(fx5_context_t *ctx,
 /**
  * @brief Set a single write payload value at a given logical index.
  *
- * For word devices, one logical value corresponds to one transmitted word.
- * For bit devices, logical values are still configured as 16-bit values:
+ * For word devices, one logical value corresponds to one transmitted word and
+ * one storage slot. For bit devices, values are addressed by logical bit index
+ * and packed internally; callers still pass:
  * - FX5_BIT_TRUE
  * - FX5_BIT_FALSE
  *

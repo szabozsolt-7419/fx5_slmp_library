@@ -170,10 +170,26 @@ static uint16_t fx5_unpack_bitunit_bytes(
         const uint8_t lo = (uint8_t)(b & 0x0Fu);
 
         if (bit_index < bit_count) {
-            values[bit_index++] = (hi == 0x01u) ? FX5_BIT_TRUE : FX5_BIT_FALSE;
+            const uint16_t slot = (uint16_t)(bit_index / 16u);
+            const uint16_t mask = (uint16_t)(1u << (bit_index % 16u));
+
+            if (hi == 0x01u) {
+                values[slot] = (uint16_t)(values[slot] | mask);
+            } else {
+                values[slot] = (uint16_t)(values[slot] & (uint16_t)~mask);
+            }
+            bit_index++;
         }
         if (bit_index < bit_count) {
-            values[bit_index++] = (lo == 0x01u) ? FX5_BIT_TRUE : FX5_BIT_FALSE;
+            const uint16_t slot = (uint16_t)(bit_index / 16u);
+            const uint16_t mask = (uint16_t)(1u << (bit_index % 16u));
+
+            if (lo == 0x01u) {
+                values[slot] = (uint16_t)(values[slot] | mask);
+            } else {
+                values[slot] = (uint16_t)(values[slot] & (uint16_t)~mask);
+            }
+            bit_index++;
         }
     }
 
@@ -194,7 +210,7 @@ fx5_status_t fx5_parse_bit_response_payload(
     const uint16_t requested_count = context->count;
     const uint16_t expected_payload_size = (uint16_t)((requested_count + 1u) / 2u);
 
-    if (requested_count == 0u || requested_count > FX5_MAX_VALUE_COUNT) {
+    if (requested_count == 0u || requested_count > FX5_MAX_BIT_VALUE_COUNT) {
         if (payload_size > 0u) {
             fx5_ringbuf_drop_front(rx_buffer, payload_size);
         }

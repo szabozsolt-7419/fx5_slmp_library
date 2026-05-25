@@ -44,6 +44,32 @@ void test_build_request_rejects_zero_count(void)
 
 }
 
+void test_set_request_uses_separate_word_and_bit_limits(void)
+{
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_COUNT,
+                      fx5_set_request(g_ctx,
+                                      FX5_CMD_BATCH_READ,
+                                      FX5_DEV_D,
+                                      0u,
+                                      (uint16_t)(FX5_MAX_WORD_VALUE_COUNT + 1u)));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx,
+                                      FX5_CMD_BATCH_READ,
+                                      FX5_DEV_M,
+                                      0u,
+                                      FX5_MAX_BIT_VALUE_COUNT));
+
+    TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_COUNT,
+                      fx5_set_request(g_ctx,
+                                      FX5_CMD_BATCH_READ,
+                                      FX5_DEV_M,
+                                      0u,
+                                      (uint16_t)(FX5_MAX_BIT_VALUE_COUNT + 1u)));
+}
+
 void test_set_write_value_rejects_out_of_range_index(void)
 {    
     fx5_status_t st;
@@ -58,6 +84,32 @@ void test_set_write_value_rejects_out_of_range_index(void)
 
     st = fx5_set_write_value(g_ctx, 1u, 0x1234u);
     TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_INDEX, st);
+}
+
+void test_bit_write_accepts_max_bit_index(void)
+{
+    uint8_t buf[FX5_MAX_REQUEST_SIZE];
+    uint16_t actual_size = 0u;
+    fx5_network_settings_t net;
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    make_default_3e_settings(&net);
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_network_settings(g_ctx, &net));
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx,
+                                      FX5_CMD_BATCH_WRITE,
+                                      FX5_DEV_M,
+                                      0u,
+                                      FX5_MAX_BIT_VALUE_COUNT));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_write_value(g_ctx,
+                                          (uint16_t)(FX5_MAX_BIT_VALUE_COUNT - 1u),
+                                          FX5_BIT_TRUE));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_build_request(g_ctx, buf, (uint16_t)sizeof(buf), &actual_size));
 }
 
 void test_build_request_rejects_too_small_output_buffer(void)
@@ -205,6 +257,42 @@ void test_parse_bit_response_keeps_requested_odd_count(void)
         TEST_ASSERT_EQUAL_UINT16(FX5_BIT_TRUE, value);
         TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_INDEX, fx5_get_response_value(g_ctx, 1u, &value));
     }
+}
+
+void test_parse_bit_response_accepts_max_bit_count(void)
+{
+    uint8_t response[FX5_RESP_TCP_HEADER_SIZE_3E + FX5_RESP_PDU_HEADER_SIZE + FX5_MAX_BIT_PAYLOAD_BYTES];
+    uint16_t packet_size = (uint16_t)(FX5_RESP_PDU_HEADER_SIZE + FX5_MAX_BIT_PAYLOAD_BYTES);
+    uint16_t value = 0u;
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    memset(response, 0, sizeof(response));
+    response[0] = 0xD0u;
+    response[1] = 0x00u;
+    response[3] = 0xFFu;
+    response[4] = 0xFFu;
+    response[5] = 0x03u;
+    response[7] = (uint8_t)(packet_size & 0xFFu);
+    response[8] = (uint8_t)((packet_size >> 8) & 0xFFu);
+    response[sizeof(response) - 1u] = 0x01u;
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx,
+                                      FX5_CMD_BATCH_READ,
+                                      FX5_DEV_M,
+                                      0u,
+                                      FX5_MAX_BIT_VALUE_COUNT));
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx, response, (uint16_t)sizeof(response)));
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_parse_response(g_ctx));
+    TEST_ASSERT_EQUAL_UINT16(FX5_MAX_BIT_VALUE_COUNT, fx5_get_response_count(g_ctx));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_get_response_value(g_ctx,
+                                             (uint16_t)(FX5_MAX_BIT_VALUE_COUNT - 1u),
+                                             &value));
+    TEST_ASSERT_EQUAL_UINT16(FX5_BIT_TRUE, value);
 }
 
 void test_parse_word_response_rejects_short_payload(void)

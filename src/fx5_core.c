@@ -185,10 +185,13 @@ fx5_status_t fx5_set_request(
 {
     fx5_status_t status = fx5_require_acquired(ctx);
     if (status != FX5_ST_OK) return status;
-    if (count == 0u || count > FX5_MAX_VALUE_COUNT) return FX5_ST_ERR_INVALID_COUNT;
+    if (count == 0u) return FX5_ST_ERR_INVALID_COUNT;
     if (address > FX5_MAX_ADDRESS) return FX5_ST_ERR_INVALID_ADDRESS;
     if (!fx5_is_supported_command(command)) return FX5_ST_ERR_UNSUPPORTED;
     if (!fx5_is_supported_device(device)) return FX5_ST_ERR_UNSUPPORTED;
+    if (count > (fx5_is_bit_device(device) ? FX5_MAX_BIT_VALUE_COUNT : FX5_MAX_WORD_VALUE_COUNT)) {
+        return FX5_ST_ERR_INVALID_COUNT;
+    }
 
     ctx->command = command;
     ctx->device = device;
@@ -213,7 +216,23 @@ fx5_status_t fx5_set_write_value(
     fx5_status_t status = fx5_require_acquired(ctx);
     if (status != FX5_ST_OK) return status;
     if (ctx->count == 0u) return FX5_ST_ERR_STATE;
-    if (index >= ctx->count || index >= FX5_MAX_VALUE_COUNT) return FX5_ST_ERR_INVALID_INDEX;
+    if (index >= ctx->count) return FX5_ST_ERR_INVALID_INDEX;
+
+    if (fx5_is_bit_device(ctx->device)) {
+        const uint16_t slot = (uint16_t)(index / 16u);
+        const uint16_t mask = (uint16_t)(1u << (index % 16u));
+
+        if (slot >= FX5_MAX_VALUE_COUNT) return FX5_ST_ERR_INVALID_INDEX;
+
+        if (value != 0u) {
+            ctx->values[slot] = (uint16_t)(ctx->values[slot] | mask);
+        } else {
+            ctx->values[slot] = (uint16_t)(ctx->values[slot] & (uint16_t)~mask);
+        }
+        return FX5_ST_OK;
+    }
+
+    if (index >= FX5_MAX_WORD_VALUE_COUNT) return FX5_ST_ERR_INVALID_INDEX;
 
     ctx->values[index] = value;
     return FX5_ST_OK;
@@ -378,6 +397,16 @@ fx5_status_t fx5_get_response_value(
     if (status != FX5_ST_OK) return status;
     if (out_value == NULL) return FX5_ST_ERR_NULL;
     if (index >= ctx->count) return FX5_ST_ERR_INVALID_INDEX;
+
+    if (fx5_is_bit_device(ctx->device)) {
+        const uint16_t slot = (uint16_t)(index / 16u);
+        const uint16_t mask = (uint16_t)(1u << (index % 16u));
+
+        if (slot >= FX5_MAX_VALUE_COUNT) return FX5_ST_ERR_INVALID_INDEX;
+
+        *out_value = ((ctx->values[slot] & mask) != 0u) ? FX5_BIT_TRUE : FX5_BIT_FALSE;
+        return FX5_ST_OK;
+    }
 
     *out_value = ctx->values[index];
     return FX5_ST_OK;

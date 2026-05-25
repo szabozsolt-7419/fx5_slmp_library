@@ -62,16 +62,34 @@ src/
 
 ## Transaction Size Limit
 
-`FX5_MAX_VALUE_COUNT` controls how many logical values one `fx5_context_t`
-can store for a request or parsed response. The default is:
+`FX5_MAX_VALUE_COUNT` controls how many 16-bit value storage slots one
+`fx5_context_t` owns for a request or parsed response. The default is:
 
 ```c
 #define FX5_MAX_VALUE_COUNT (32u)
 ```
 
 This is a **library storage limit**, not an SLMP protocol limit and not an FX5
-PLC limit. `fx5_set_request()` rejects larger counts because each context owns a
-fixed-size value array and the library performs no dynamic allocation.
+PLC limit. The library performs no dynamic allocation, so `fx5_set_request()`
+rejects requests that do not fit into the fixed-size context storage.
+
+The logical transaction limits are:
+
+```c
+FX5_MAX_WORD_VALUE_COUNT == FX5_MAX_VALUE_COUNT
+FX5_MAX_BIT_VALUE_COUNT  == FX5_MAX_VALUE_COUNT * 16
+```
+
+With the default settings this means:
+
+```text
+word devices: 32 logical values
+bit devices : 512 logical values
+```
+
+Bit values are packed internally: one 16-bit storage slot stores 16 logical bit
+values. Public calls still address bit values by logical bit index through
+`fx5_set_write_value()` and `fx5_get_response_value()`.
 
 For larger batch reads or writes, override the value at compile time before
 building the library, for example:
@@ -81,7 +99,7 @@ cmake -S . -B build -DCMAKE_C_FLAGS="-DFX5_MAX_VALUE_COUNT=128"
 ```
 
 Increasing the value increases RAM usage per context and the generated maximum
-request buffer size.
+request/response buffer size.
 
 ---
 

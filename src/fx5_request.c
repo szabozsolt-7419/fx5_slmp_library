@@ -83,6 +83,24 @@ static bool fx5_device_allows_write(
     }
 }
 
+static uint16_t fx5_get_max_value_count(
+    fx5_device_t device
+    )
+{
+    return fx5_is_bit_device(device) ? FX5_MAX_BIT_VALUE_COUNT : FX5_MAX_WORD_VALUE_COUNT;
+}
+
+static bool fx5_get_packed_bit_value(
+    const uint16_t *values,
+    uint16_t index
+    )
+{
+    const uint16_t slot = (uint16_t)(index / 16u);
+    const uint16_t mask = (uint16_t)(1u << (index % 16u));
+
+    return (values[slot] & mask) != 0u;
+}
+
 
 uint16_t fx5_get_request_header_size(
     fx5_header_t header_type
@@ -127,10 +145,10 @@ fx5_status_t fx5_validate_request(
 {
     if (context == NULL) return FX5_ST_ERR_NULL;
     if (context->count == 0u) return FX5_ST_ERR_INVALID_COUNT;
-    if (context->count > FX5_MAX_VALUE_COUNT) return FX5_ST_ERR_INVALID_COUNT;
     if (context->address > FX5_MAX_ADDRESS) return FX5_ST_ERR_INVALID_ADDRESS;
     if (!fx5_is_supported_command(context->command)) return FX5_ST_ERR_UNSUPPORTED;
     if (!fx5_is_supported_device(context->device)) return FX5_ST_ERR_UNSUPPORTED;
+    if (context->count > fx5_get_max_value_count(context->device)) return FX5_ST_ERR_INVALID_COUNT;
     if (context->command == FX5_CMD_BATCH_WRITE && !fx5_device_allows_write(context->device)) {
         return FX5_ST_ERR_UNSUPPORTED;
     }
@@ -263,12 +281,12 @@ static int fx5_pack_bits_to_nibbles(
     uint16_t k = 0u;
 
     while (k < count) {
-        uint8_t hi = (values[k] != 0u) ? 0x10u : 0x00u;
+        uint8_t hi = fx5_get_packed_bit_value(values, k) ? 0x10u : 0x00u;
         uint8_t lo = 0x00u;
 
         k++;
         if (k < count) {
-            lo = (values[k] != 0u) ? 0x01u : 0x00u;
+            lo = fx5_get_packed_bit_value(values, k) ? 0x01u : 0x00u;
             k++;
         }
 
