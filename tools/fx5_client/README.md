@@ -80,6 +80,13 @@ set M51-60=true
 set M51-56=true,false,true,false,true,true
 ```
 
+### Supported Devices
+
+```
+word: D
+bit : M, X, Y
+```
+
 ### Runtime
 
 ```

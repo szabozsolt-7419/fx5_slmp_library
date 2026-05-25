@@ -28,6 +28,10 @@ static void fx5_client_print_help(void)
     printf("  set M51=true\n");
     printf("  set M51-60=true\n");
     printf("  set M51-56=true,false,true,false,true,true\n");
+    printf("\n");
+    printf("Supported devices:\n");
+    printf("  word: D\n");
+    printf("  bit : M, X, Y\n");
 }
 
 int fx5_client_repl_run(fx5_client_app_t *app)
