@@ -24,7 +24,7 @@ The design targets embedded systems and low-level integrations.
 * Optional 3E request generation
 * Automatic 3E / 4E response detection
 * Batch read / write
-* Devices: D, M, X, Y
+* Devices: D, M, X, Y, L, F, S, B, W, SM, SD, SB, SW
 * No dynamic allocation
 * Opaque context
 * Internal context pool
@@ -45,15 +45,43 @@ The design targets embedded systems and low-level integrations.
 include/
   fx5/
     fx5.h                # Public API
-    buffer.h             # Byte buffer (temporary, planned rewrite)
+    fx5_layout.h         # Public frame size constants
+    fx5_ringbuf.h        # Ring buffer API
     internal/
       fx5_private.h      # Internal API (used by tests)
       fx5_utility.h      # Low-level helpers
 
 src/
-  fx5.c
-  buffer.c
+  fx5_core.c
+  fx5_request.c
+  fx5_response.c
+  fx5_ringbuf.c
 ```
+
+---
+
+## Transaction Size Limit
+
+`FX5_MAX_VALUE_COUNT` controls how many logical values one `fx5_context_t`
+can store for a request or parsed response. The default is:
+
+```c
+#define FX5_MAX_VALUE_COUNT (32u)
+```
+
+This is a **library storage limit**, not an SLMP protocol limit and not an FX5
+PLC limit. `fx5_set_request()` rejects larger counts because each context owns a
+fixed-size value array and the library performs no dynamic allocation.
+
+For larger batch reads or writes, override the value at compile time before
+building the library, for example:
+
+```sh
+cmake -S . -B build -DCMAKE_C_FLAGS="-DFX5_MAX_VALUE_COUNT=128"
+```
+
+Increasing the value increases RAM usage per context and the generated maximum
+request buffer size.
 
 ---
 

@@ -40,7 +40,14 @@ extern "C" {
  * @brief Maximum number of logical values stored in a context.
  *
  * This limit applies to both write payload values and parsed response values.
- * It is a compile-time tradeoff between RAM usage and maximum transaction size.
+ * It is a compile-time storage limit of this library, not an SLMP or FX5 PLC
+ * protocol limit. fx5_set_request() rejects requests whose @p count is greater
+ * than this value.
+ *
+ * The default keeps each context small for embedded/static allocation use.
+ * Define FX5_MAX_VALUE_COUNT before including this header, or pass a compiler
+ * definition such as -DFX5_MAX_VALUE_COUNT=128, to trade more RAM for larger
+ * batch read/write transactions.
  */
 #ifndef FX5_MAX_VALUE_COUNT
 #define FX5_MAX_VALUE_COUNT (32u)
@@ -326,6 +333,10 @@ fx5_status_t fx5_set_monitoring_timer(fx5_context_t *ctx,
  * This call sets the transaction command, target device, base address,
  * and logical value count. For write requests, individual payload values
  * may then be set with fx5_set_write_value().
+ *
+ * @p count is limited by @ref FX5_MAX_VALUE_COUNT. This is a library storage
+ * limit caused by the fixed-size value array in each context. It should not be
+ * interpreted as the maximum batch size supported by the PLC or by SLMP.
  *
  * @param[in] ctx Context handle.
  * @param[in] command Command code.
