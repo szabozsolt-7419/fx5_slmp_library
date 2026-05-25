@@ -207,6 +207,82 @@ void test_parse_bit_response_keeps_requested_odd_count(void)
     }
 }
 
+void test_parse_word_response_rejects_short_payload(void)
+{
+    static const uint8_t read_short_word_3e[] = {
+        0xD0, 0x00,
+        0x00,
+        0xFF,
+        0xFF, 0x03,
+        0x00,
+        0x04, 0x00,
+        0x00, 0x00,
+        0x34, 0x12
+    };
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx, FX5_CMD_BATCH_READ, FX5_DEV_D, 100u, 2u));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx,
+                                              read_short_word_3e,
+                                              (uint16_t)sizeof(read_short_word_3e)));
+    TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_COUNT, fx5_parse_response(g_ctx));
+}
+
+void test_parse_word_response_rejects_long_payload(void)
+{
+    static const uint8_t read_long_word_3e[] = {
+        0xD0, 0x00,
+        0x00,
+        0xFF,
+        0xFF, 0x03,
+        0x00,
+        0x08, 0x00,
+        0x00, 0x00,
+        0x34, 0x12,
+        0x78, 0x56,
+        0xBC, 0x9A
+    };
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx, FX5_CMD_BATCH_READ, FX5_DEV_D, 100u, 2u));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx,
+                                              read_long_word_3e,
+                                              (uint16_t)sizeof(read_long_word_3e)));
+    TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_COUNT, fx5_parse_response(g_ctx));
+}
+
+void test_parse_bit_write_ok_response_has_zero_response_count(void)
+{
+    static const uint8_t write_ok_3e[] = {
+        0xD0, 0x00,
+        0x00,
+        0xFF,
+        0xFF, 0x03,
+        0x00,
+        0x02, 0x00,
+        0x00, 0x00
+    };
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx, FX5_CMD_BATCH_WRITE, FX5_DEV_M, 100u, 1u));
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_write_value(g_ctx, 0u, FX5_BIT_TRUE));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx, write_ok_3e, (uint16_t)sizeof(write_ok_3e)));
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_parse_response(g_ctx));
+    TEST_ASSERT_EQUAL_UINT16(0u, fx5_get_response_count(g_ctx));
+}
+
 void test_parse_response_resync_limit_exceeded(void)
 {
 

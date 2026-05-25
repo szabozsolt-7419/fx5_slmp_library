@@ -116,7 +116,20 @@ fx5_status_t fx5_parse_word_response_payload(
     if ((payload_size & 1u) != 0u) return FX5_ST_ERR_INVALID_COUNT;
 
     const uint16_t value_count = (uint16_t)(payload_size / 2u);
-    if (value_count > FX5_MAX_VALUE_COUNT) {
+    const uint16_t requested_count = context->count;
+    const uint16_t expected_payload_size = (uint16_t)(requested_count * 2u);
+
+    if (requested_count == 0u || requested_count > FX5_MAX_VALUE_COUNT) {
+        if (payload_size > 0u) {
+            fx5_ringbuf_drop_front(rx_buffer, payload_size);
+        }
+        return FX5_ST_ERR_INVALID_COUNT;
+    }
+
+    if (payload_size != expected_payload_size) {
+        if (payload_size > 0u) {
+            fx5_ringbuf_drop_front(rx_buffer, payload_size);
+        }
         return FX5_ST_ERR_INVALID_COUNT;
     }
 
@@ -229,6 +242,16 @@ fx5_status_t fx5_parse_response_pdu(
         }
         context->count = 0u;
         return FX5_ST_RESPONSE_ERROR;
+    }
+
+    if (context->command == FX5_CMD_BATCH_WRITE) {
+        if (payload_size > 0u) {
+            fx5_ringbuf_drop_front(rx_buffer, payload_size);
+            return FX5_ST_ERR_INVALID_COUNT;
+        }
+
+        context->count = 0u;
+        return FX5_ST_OK;
     }
 
     if (fx5_is_bit_device(context->device)) {
