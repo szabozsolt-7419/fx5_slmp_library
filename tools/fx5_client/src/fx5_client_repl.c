@@ -1,3 +1,7 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "fx5_client_repl.h"
 
 #include <ctype.h>
@@ -36,6 +40,41 @@ static void fx5_client_print_help(void)
     printf("  addressing: X/Y octal, B/W/SB/SW hex, others decimal\n");
 }
 
+static bool fx5_client_execute_repl_command(
+    fx5_client_app_t *app,
+    const fx5_client_command_t *cmd
+    )
+{
+    if (app == NULL || cmd == NULL) {
+        return false;
+    }
+
+    switch (cmd->type) {
+        case FX5_CLIENT_CMD_HELP:
+            fx5_client_print_help();
+            return true;
+
+        case FX5_CLIENT_CMD_TRACE:
+            app->config->trace_enabled = cmd->trace_enabled;
+            printf("trace: %s\n", app->config->trace_enabled ? "on" : "off");
+            return true;
+
+        case FX5_CLIENT_CMD_HEADER:
+            app->config->network_settings.header_type = cmd->header_type;
+            printf("header: %s\n",
+                   app->config->network_settings.header_type == FX5_3E_HEADER ? "3E" : "4E");
+            return true;
+
+        case FX5_CLIENT_CMD_GET:
+        case FX5_CLIENT_CMD_SET:
+            return fx5_client_app_execute_command(app, cmd);
+
+        default:
+            printf("Unsupported command.\n");
+            return false;
+    }
+}
+
 int fx5_client_repl_run(fx5_client_app_t *app)
 {
     char line_buffer[512];
@@ -72,40 +111,70 @@ int fx5_client_repl_run(fx5_client_app_t *app)
             continue;
         }
 
-        switch (cmd.type) {
-            case FX5_CLIENT_CMD_QUIT:
-                return 0;
+        if (cmd.type == FX5_CLIENT_CMD_QUIT) {
+            return 0;
+        }
 
-            case FX5_CLIENT_CMD_HELP:
-                fx5_client_print_help();
-                continue;
-
-            case FX5_CLIENT_CMD_TRACE:
-                app->config->trace_enabled = cmd.trace_enabled;
-                printf("trace: %s\n", app->config->trace_enabled ? "on" : "off");
-                continue;
-
-            case FX5_CLIENT_CMD_HEADER:
-                app->config->network_settings.header_type = cmd.header_type;
-                printf("header: %s\n",
-                       app->config->network_settings.header_type == FX5_3E_HEADER ? "3E" : "4E");
-                continue;
-
-            case FX5_CLIENT_CMD_GET:
-            case FX5_CLIENT_CMD_SET:
-                if (!fx5_client_app_execute_command(
-                        app,
-                        &cmd
-                        )) {
-                    continue;
-                }
-                continue;
-
-            default:
-                printf("Unsupported command.\n");
-                continue;
+        if (!fx5_client_execute_repl_command(app, &cmd)) {
+            continue;
         }
     }
 
     return 0;
+}
+
+int fx5_client_script_run(fx5_client_app_t *app, const char *path)
+{
+    FILE *script = NULL;
+    char line_buffer[512];
+    unsigned line_no = 0u;
+    int rc = 0;
+
+    if (app == NULL || path == NULL) {
+        fprintf(stderr, "Script error: invalid argument\n");
+        return 2;
+    }
+
+    script = fopen(path, "r");
+    if (script == NULL) {
+        fprintf(stderr, "ERR: failed to open script: %s\n", path);
+        return 2;
+    }
+
+    while (fgets(line_buffer, sizeof(line_buffer), script) != NULL) {
+        char *line = NULL;
+        fx5_client_command_t cmd;
+
+        line_no++;
+        fx5_client_trim_right(line_buffer);
+        line = fx5_client_skip_spaces_mut(line_buffer);
+
+        if (line == NULL || *line == '\0' || *line == '#') {
+            continue;
+        }
+
+        if (!fx5_client_parse_command(line, &cmd)) {
+            fprintf(stderr, "ERR: script syntax error at line %u\n", line_no);
+            rc = 1;
+            break;
+        }
+
+        if (cmd.type == FX5_CLIENT_CMD_QUIT) {
+            break;
+        }
+
+        if (!fx5_client_execute_repl_command(app, &cmd)) {
+            fprintf(stderr, "ERR: script command failed at line %u\n", line_no);
+            rc = 1;
+            break;
+        }
+    }
+
+    if (ferror(script)) {
+        fprintf(stderr, "ERR: failed to read script: %s\n", path);
+        rc = 2;
+    }
+
+    fclose(script);
+    return rc;
 }

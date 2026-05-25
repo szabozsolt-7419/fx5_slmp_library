@@ -1,3 +1,7 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "fx5_client_config.h"
 
 #include <stdio.h>
@@ -66,6 +70,8 @@ void fx5_client_config_free(fx5_client_config_t *config)
 
     free(config->host);
     config->host = NULL;
+    free(config->script_path);
+    config->script_path = NULL;
 }
 
 bool fx5_client_config_set_host(fx5_client_config_t *config, const char *host)
@@ -83,6 +89,24 @@ bool fx5_client_config_set_host(fx5_client_config_t *config, const char *host)
 
     free(config->host);
     config->host = copy;
+    return true;
+}
+
+bool fx5_client_config_set_script_path(fx5_client_config_t *config, const char *path)
+{
+    char *copy;
+
+    if (config == NULL || path == NULL) {
+        return false;
+    }
+
+    copy = fx5_client_strdup(path);
+    if (copy == NULL) {
+        return false;
+    }
+
+    free(config->script_path);
+    config->script_path = copy;
     return true;
 }
 

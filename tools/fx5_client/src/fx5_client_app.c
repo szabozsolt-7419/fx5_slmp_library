@@ -1,3 +1,7 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -206,14 +210,18 @@ int fx5_client_app_run(fx5_client_config_t *config)
         return 2;
     }
 
-    printf("fx5_client starting...\n");
-    printf("  host   : %s\n", config->host != NULL ? config->host : "(null)");
-    printf("  port   : %u\n", (unsigned)config->port);
-    printf("  trace  : %s\n", config->trace_enabled ? "on" : "off");
-    printf("  header : %s\n", config->network_settings.header_type == FX5_3E_HEADER ? "3E" : "4E");
+    if (config->script_path == NULL) {
+        printf("fx5_client starting...\n");
+        printf("  host   : %s\n", config->host != NULL ? config->host : "(null)");
+        printf("  port   : %u\n", (unsigned)config->port);
+        printf("  trace  : %s\n", config->trace_enabled ? "on" : "off");
+        printf("  header : %s\n", config->network_settings.header_type == FX5_3E_HEADER ? "3E" : "4E");
+    }
 
     {
-        const int rc = fx5_client_repl_run(&app);
+        const int rc = (config->script_path != NULL)
+            ? fx5_client_script_run(&app, config->script_path)
+            : fx5_client_repl_run(&app);
         fx5_client_app_shutdown(&app);
         return rc;
     }

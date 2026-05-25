@@ -22,6 +22,7 @@ typedef struct
     uint16_t port;
     bool trace_enabled;    
     uint32_t recv_timeout_ms;
+    char *script_path;
     fx5_network_settings_t network_settings;
 } fx5_client_config_t;
 
@@ -49,6 +50,18 @@ void fx5_client_config_free(fx5_client_config_t *config);
  * @return true on success, false on failure.
  */
 bool fx5_client_config_set_host(fx5_client_config_t *config, const char *host);
+
+/**
+ * @brief Set the optional command script path.
+ *
+ * The previous script path string is released and replaced with a newly
+ * allocated copy.
+ *
+ * @param[in,out] config Configuration structure.
+ * @param[in] path Script file path.
+ * @return true on success, false on failure.
+ */
+bool fx5_client_config_set_script_path(fx5_client_config_t *config, const char *path);
 
 /**
  * @brief Load configuration values from an INI-style file.

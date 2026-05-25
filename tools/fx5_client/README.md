@@ -42,6 +42,12 @@ Example:
 fx5_client 192.168.0.10 5000 --trace
 ```
 
+Run commands from a file:
+
+```
+fx5_client 192.168.0.10 5000 --script smoke.txt
+```
+
 ---
 
 ## Interactive Mode
@@ -57,6 +63,26 @@ Type:
 ```
 help
 ```
+
+---
+
+## Script Mode
+
+`--script <file>` reads commands from a text file and executes them in order.
+The same parser and command execution path are used as in interactive mode.
+
+```
+# smoke.txt
+header 3e
+get D100
+get M51-60
+quit
+```
+
+Empty lines and lines starting with `#` after leading whitespace are ignored.
+Script mode does not print the startup banner or `fx5>` prompt, so stdout can
+be compared against an expected result file. The process returns non-zero if a
+script line has a syntax error or a command fails.
 
 ---
 

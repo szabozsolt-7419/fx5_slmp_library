@@ -1,3 +1,7 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,14 +25,16 @@ static void fx5_client_print_usage(const char *program_name)
 {
     fprintf(stderr,
             "Usage:\n"
-            "  %s <host> <port> [--trace] [--header=3e|4e]\n"
+            "  %s <host> <port> [--trace] [--header=3e|4e] [--script <file>]\n"
             "  %s --help\n"
             "  %s --version\n"
             "\n"
             "Examples:\n"
             "  %s 192.168.0.10 5000\n"
             "  %s 192.168.0.10 5000 --trace\n"
-            "  %s 192.168.0.10 5000 --header=3e\n",
+            "  %s 192.168.0.10 5000 --header=3e\n"
+            "  %s 192.168.0.10 5000 --script smoke.txt\n",
+            program_name,
             program_name,
             program_name,
             program_name,
@@ -60,8 +66,20 @@ static bool fx5_client_parse_port(const char *text, uint16_t *out_port)
     return true;
 }
 
-static bool fx5_client_parse_optional_arg(const char *arg, fx5_client_config_t *config)
+static bool fx5_client_parse_optional_arg(
+    int argc,
+    char **argv,
+    int *index,
+    fx5_client_config_t *config
+    )
 {
+    const char *arg = NULL;
+
+    if (argv == NULL || index == NULL) {
+        return false;
+    }
+
+    arg = argv[*index];
     if (arg == NULL || config == NULL) {
         return false;
     }
@@ -79,6 +97,22 @@ static bool fx5_client_parse_optional_arg(const char *arg, fx5_client_config_t *
     if (strcmp(arg, "--header=4e") == 0) {
         config->network_settings.header_type = FX5_4E_HEADER;
         return true;
+    }
+
+    if (strcmp(arg, "--script") == 0) {
+        if (*index + 1 >= argc) {
+            return false;
+        }
+        (*index)++;
+        return fx5_client_config_set_script_path(config, argv[*index]);
+    }
+
+    if (strncmp(arg, "--script=", 9u) == 0) {
+        const char *path = arg + 9u;
+        if (*path == '\0') {
+            return false;
+        }
+        return fx5_client_config_set_script_path(config, path);
     }
 
     return false;
@@ -127,7 +161,7 @@ int main(int argc, char **argv)
     config.port = port;
 
     for (i = 3; i < argc; ++i) {
-        if (!fx5_client_parse_optional_arg(argv[i], &config)) {
+        if (!fx5_client_parse_optional_arg(argc, argv, &i, &config)) {
             fprintf(stderr, "Unknown option: %s\n", argv[i]);
             fx5_client_print_usage(argv[0]);
             fx5_client_config_free(&config);
