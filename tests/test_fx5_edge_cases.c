@@ -110,6 +110,33 @@ void test_build_request_accepts_extended_fx5_devices(void)
     }
 }
 
+void test_build_request_rejects_writes_to_read_only_devices(void)
+{
+    static const fx5_device_t devices[] = {
+        FX5_DEV_SM,
+        FX5_DEV_SD,
+        FX5_DEV_SB,
+        FX5_DEV_SW
+    };
+    uint8_t buf[FX5_MAX_REQUEST_SIZE];
+    uint16_t actual_size = 0u;
+    fx5_network_settings_t net;
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    make_default_3e_settings(&net);
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_network_settings(g_ctx, &net));
+
+    for (size_t i = 0u; i < sizeof(devices) / sizeof(devices[0]); ++i) {
+        TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_reset(g_ctx));
+        TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_network_settings(g_ctx, &net));
+        TEST_ASSERT_EQUAL(FX5_ST_OK,
+                          fx5_set_request(g_ctx, FX5_CMD_BATCH_WRITE, devices[i], 0u, 1u));
+        TEST_ASSERT_EQUAL(FX5_ST_ERR_UNSUPPORTED,
+                          fx5_build_request(g_ctx, buf, (uint16_t)sizeof(buf), &actual_size));
+    }
+}
+
 void test_parse_response_returns_error_on_nonzero_end_code(void)
 {    
     fx5_status_t st;

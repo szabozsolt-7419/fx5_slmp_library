@@ -68,6 +68,21 @@ bool fx5_is_bit_device(
     return false;
 }
 
+static bool fx5_device_allows_write(
+    fx5_device_t device
+    )
+{
+    switch (device) {
+        case FX5_DEV_SM:
+        case FX5_DEV_SD:
+        case FX5_DEV_SB:
+        case FX5_DEV_SW:
+            return false;
+        default:
+            return true;
+    }
+}
+
 
 uint16_t fx5_get_request_header_size(
     fx5_header_t header_type
@@ -116,6 +131,9 @@ fx5_status_t fx5_validate_request(
     if (context->address > FX5_MAX_ADDRESS) return FX5_ST_ERR_INVALID_ADDRESS;
     if (!fx5_is_supported_command(context->command)) return FX5_ST_ERR_UNSUPPORTED;
     if (!fx5_is_supported_device(context->device)) return FX5_ST_ERR_UNSUPPORTED;
+    if (context->command == FX5_CMD_BATCH_WRITE && !fx5_device_allows_write(context->device)) {
+        return FX5_ST_ERR_UNSUPPORTED;
+    }
     if (context->network_settings.header_type != FX5_3E_HEADER && context->network_settings.header_type != FX5_4E_HEADER) {
         return FX5_ST_ERR_UNSUPPORTED;
     }

@@ -31,6 +31,7 @@ void test_build_request_rejects_zero_count(void);
 void test_set_write_value_rejects_out_of_range_index(void);
 void test_build_request_rejects_too_small_output_buffer(void);
 void test_build_request_accepts_extended_fx5_devices(void);
+void test_build_request_rejects_writes_to_read_only_devices(void);
 void test_parse_response_returns_error_on_nonzero_end_code(void);
 void test_parse_bit_response_keeps_requested_odd_count(void);
 void test_parse_response_resync_limit_exceeded(void);
@@ -60,6 +61,7 @@ int main(void)
     RUN_TEST(test_set_write_value_rejects_out_of_range_index);
     RUN_TEST(test_build_request_rejects_too_small_output_buffer);
     RUN_TEST(test_build_request_accepts_extended_fx5_devices);
+    RUN_TEST(test_build_request_rejects_writes_to_read_only_devices);
     RUN_TEST(test_parse_response_returns_error_on_nonzero_end_code);
     RUN_TEST(test_parse_bit_response_keeps_requested_odd_count);
     RUN_TEST(test_parse_response_resync_limit_exceeded);
