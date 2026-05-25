@@ -227,6 +227,7 @@ fx5_status_t fx5_parse_response_pdu(
         if (payload_size > 0u) {
             fx5_ringbuf_drop_front(rx_buffer, payload_size);
         }
+        context->count = 0u;
         return FX5_ST_RESPONSE_ERROR;
     }
 

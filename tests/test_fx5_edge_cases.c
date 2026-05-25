@@ -170,6 +170,7 @@ void test_parse_response_returns_error_on_nonzero_end_code(void)
     st = fx5_parse_response(g_ctx);
     TEST_ASSERT_EQUAL(FX5_ST_RESPONSE_ERROR, st);
     TEST_ASSERT_EQUAL_HEX16(0xC051u, fx5_get_response_code(g_ctx));
+    TEST_ASSERT_EQUAL_UINT16(0u, fx5_get_response_count(g_ctx));
 
 }
 
