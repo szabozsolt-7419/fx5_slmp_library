@@ -37,6 +37,7 @@ void test_build_request_rejects_writes_to_read_only_devices(void);
 void test_parse_response_returns_error_on_nonzero_end_code(void);
 void test_parse_bit_response_keeps_requested_odd_count(void);
 void test_parse_bit_response_accepts_max_bit_count(void);
+void test_parse_bit_response_rejects_long_payload(void);
 void test_parse_word_response_rejects_short_payload(void);
 void test_parse_word_response_rejects_long_payload(void);
 void test_parse_bit_write_ok_response_has_zero_response_count(void);
@@ -73,6 +74,7 @@ int main(void)
     RUN_TEST(test_parse_response_returns_error_on_nonzero_end_code);
     RUN_TEST(test_parse_bit_response_keeps_requested_odd_count);
     RUN_TEST(test_parse_bit_response_accepts_max_bit_count);
+    RUN_TEST(test_parse_bit_response_rejects_long_payload);
     RUN_TEST(test_parse_word_response_rejects_short_payload);
     RUN_TEST(test_parse_word_response_rejects_long_payload);
     RUN_TEST(test_parse_bit_write_ok_response_has_zero_response_count);

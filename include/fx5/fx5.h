@@ -55,14 +55,22 @@ extern "C" {
 #define FX5_MAX_VALUE_COUNT (32u)
 #endif
 
+#if FX5_MAX_VALUE_COUNT == 0
+#error "FX5_MAX_VALUE_COUNT must be greater than zero"
+#endif
+
+#if FX5_MAX_VALUE_COUNT > 4095
+#error "FX5_MAX_VALUE_COUNT must be <= 4095 because public value counts are uint16_t"
+#endif
+
 /** @brief Maximum logical values per word-device transaction. */
 #define FX5_MAX_WORD_VALUE_COUNT (FX5_MAX_VALUE_COUNT)
 
 /** @brief Maximum logical values per bit-device transaction. */
-#define FX5_MAX_BIT_VALUE_COUNT  ((uint16_t)(FX5_MAX_VALUE_COUNT * 16u))
+#define FX5_MAX_BIT_VALUE_COUNT  ((uint16_t)((uint32_t)FX5_MAX_VALUE_COUNT * 16u))
 
 /** @brief Maximum word-device payload bytes stored by one context. */
-#define FX5_MAX_WORD_PAYLOAD_BYTES ((uint16_t)(FX5_MAX_WORD_VALUE_COUNT * 2u))
+#define FX5_MAX_WORD_PAYLOAD_BYTES ((uint16_t)((uint32_t)FX5_MAX_WORD_VALUE_COUNT * 2u))
 
 /** @brief Maximum bit-device payload bytes stored by one context. */
 #define FX5_MAX_BIT_PAYLOAD_BYTES  ((uint16_t)((FX5_MAX_BIT_VALUE_COUNT + 1u) / 2u))
@@ -76,6 +84,26 @@ extern "C" {
  */
 #ifndef FX5_CONTEXT_POOL_SIZE
 #define FX5_CONTEXT_POOL_SIZE (2u)
+#endif
+
+#if FX5_CONTEXT_POOL_SIZE == 0
+#error "FX5_CONTEXT_POOL_SIZE must be greater than zero"
+#endif
+
+/**
+ * @def FX5_CLEAR_VALUES_ON_SET_REQUEST
+ * @brief Controls whether fx5_set_request() clears the whole context value store.
+ *
+ * Enabled by default for deterministic behavior and stale-value protection.
+ * Embedded builds that need to minimize CPU time may define this as 0 if the
+ * application always initializes all write values before building a request.
+ */
+#ifndef FX5_CLEAR_VALUES_ON_SET_REQUEST
+#define FX5_CLEAR_VALUES_ON_SET_REQUEST (1u)
+#endif
+
+#if FX5_CLEAR_VALUES_ON_SET_REQUEST != 0 && FX5_CLEAR_VALUES_ON_SET_REQUEST != 1
+#error "FX5_CLEAR_VALUES_ON_SET_REQUEST must be 0 or 1"
 #endif
 
 /**

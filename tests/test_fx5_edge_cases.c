@@ -295,6 +295,32 @@ void test_parse_bit_response_accepts_max_bit_count(void)
     TEST_ASSERT_EQUAL_UINT16(FX5_BIT_TRUE, value);
 }
 
+void test_parse_bit_response_rejects_long_payload(void)
+{
+    static const uint8_t read_long_bit_3e[] = {
+        0xD0, 0x00,
+        0x00,
+        0xFF,
+        0xFF, 0x03,
+        0x00,
+        0x04, 0x00,
+        0x00, 0x00,
+        0x10,
+        0x00
+    };
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx, FX5_CMD_BATCH_READ, FX5_DEV_M, 100u, 1u));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx,
+                                              read_long_bit_3e,
+                                              (uint16_t)sizeof(read_long_bit_3e)));
+    TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_COUNT, fx5_parse_response(g_ctx));
+}
+
 void test_parse_word_response_rejects_short_payload(void)
 {
     static const uint8_t read_short_word_3e[] = {

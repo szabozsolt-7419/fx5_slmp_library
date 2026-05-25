@@ -217,7 +217,7 @@ fx5_status_t fx5_parse_bit_response_payload(
         return FX5_ST_ERR_INVALID_COUNT;
     }
 
-    if (payload_size < expected_payload_size) {
+    if (payload_size != expected_payload_size) {
         if (payload_size > 0u) {
             fx5_ringbuf_drop_front(rx_buffer, payload_size);
         }

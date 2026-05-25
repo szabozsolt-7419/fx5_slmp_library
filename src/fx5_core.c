@@ -200,9 +200,11 @@ fx5_status_t fx5_set_request(
     ctx->response_code = FX5_RESPONSE_OK;
     ctx->resync_counter = 0u;
 
+#if FX5_CLEAR_VALUES_ON_SET_REQUEST
     for (uint16_t k = 0u; k < FX5_MAX_VALUE_COUNT; ++k) {
         ctx->values[k] = 0u;
     }
+#endif
 
     return FX5_ST_OK;
 }

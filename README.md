@@ -101,6 +101,21 @@ cmake -S . -B build -DCMAKE_C_FLAGS="-DFX5_MAX_VALUE_COUNT=128"
 Increasing the value increases RAM usage per context and the generated maximum
 request/response buffer size.
 
+`FX5_MAX_VALUE_COUNT` must be between 1 and 4095. The upper bound keeps the
+derived bit-device limit inside the `uint16_t` public API count range.
+
+By default, `fx5_set_request()` clears the whole context value storage before a
+new transaction:
+
+```c
+#define FX5_CLEAR_VALUES_ON_SET_REQUEST (1u)
+```
+
+This is the safer default because unset write values are deterministic and no
+stale values can leak from a previous request. Embedded builds that need to
+avoid this clear cost may compile with `-DFX5_CLEAR_VALUES_ON_SET_REQUEST=0`,
+but then the application must initialize every write value it intends to send.
+
 ---
 
 ## Public API Example
