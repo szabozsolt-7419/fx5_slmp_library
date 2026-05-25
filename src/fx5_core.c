@@ -321,7 +321,6 @@ fx5_status_t fx5_parse_response(fx5_context_t *context)
     if (status != FX5_ST_OK) return status;
 
     fx5_ringbuf_t *rx_buffer = &context->rx_cbuffer;
-    context->count = 0u;
     context->resync_counter = 0u;
 
     while (true) {

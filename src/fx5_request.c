@@ -25,9 +25,18 @@ bool fx5_is_supported_device(
 {
     switch (device) {
         case FX5_DEV_D:
+        case FX5_DEV_W:
+        case FX5_DEV_SD:
+        case FX5_DEV_SW:
         case FX5_DEV_M:
+        case FX5_DEV_SM:
+        case FX5_DEV_L:
+        case FX5_DEV_F:
+        case FX5_DEV_S:
         case FX5_DEV_X:
         case FX5_DEV_Y:
+        case FX5_DEV_B:
+        case FX5_DEV_SB:
             return true;
     }
 
@@ -40,10 +49,19 @@ bool fx5_is_bit_device(
 {
     switch (device) {
         case FX5_DEV_D:
+        case FX5_DEV_W:
+        case FX5_DEV_SD:
+        case FX5_DEV_SW:
             return false;
         case FX5_DEV_M:
+        case FX5_DEV_SM:
+        case FX5_DEV_L:
+        case FX5_DEV_F:
+        case FX5_DEV_S:
         case FX5_DEV_X:
         case FX5_DEV_Y:
+        case FX5_DEV_B:
+        case FX5_DEV_SB:
             return true;
     }
 

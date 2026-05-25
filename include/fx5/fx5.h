@@ -8,7 +8,7 @@
  * Supported features:
  * - Batch read
  * - Batch write
- * - Devices: D, M, X, Y
+ * - Devices: D, M, X, Y, L, F, S, B, W, SM, SD, SB, SW
  * - Request build in 4E binary by default, optionally 3E binary
  * - Response parsing with automatic 3E/4E frame detection
  *
@@ -87,10 +87,19 @@ extern "C" {
  * @brief Supported FX5 device types.
  */
 typedef enum {
-    FX5_DEV_D = 0xA8, /**< Data register */
-    FX5_DEV_X = 0x9C, /**< Input relay */
-    FX5_DEV_Y = 0x9D, /**< Output relay */
-    FX5_DEV_M = 0x90  /**< Internal relay */
+    FX5_DEV_M  = 0x90, /**< Internal relay */
+    FX5_DEV_SM = 0x91, /**< Special relay */
+    FX5_DEV_L  = 0x92, /**< Latching relay */
+    FX5_DEV_F  = 0x93, /**< Annunciator */
+    FX5_DEV_S  = 0x98, /**< Step relay */
+    FX5_DEV_X  = 0x9C, /**< Input relay */
+    FX5_DEV_Y  = 0x9D, /**< Output relay */
+    FX5_DEV_B  = 0xA0, /**< Link relay */
+    FX5_DEV_SB = 0xA1, /**< Link special relay */
+    FX5_DEV_D  = 0xA8, /**< Data register */
+    FX5_DEV_SD = 0xA9, /**< Special register */
+    FX5_DEV_W  = 0xB4, /**< Link register */
+    FX5_DEV_SW = 0xB5  /**< Link special register */
 } fx5_device_t;
 
 /**

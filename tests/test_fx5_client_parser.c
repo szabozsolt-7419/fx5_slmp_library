@@ -44,6 +44,26 @@ void test_client_parser_accepts_bit_value_list(void)
     TEST_ASSERT_EQUAL_UINT16(1u, cmd.values[5]);
 }
 
+void test_client_parser_uses_documented_address_bases(void)
+{
+    fx5_client_command_t cmd;
+
+    TEST_ASSERT_TRUE(fx5_client_parse_command("get X10-17", &cmd));
+    TEST_ASSERT_EQUAL(FX5_DEV_X, cmd.device);
+    TEST_ASSERT_EQUAL_UINT32(8u, cmd.start_address);
+    TEST_ASSERT_EQUAL_UINT16(8u, cmd.count);
+
+    TEST_ASSERT_TRUE(fx5_client_parse_command("get W10-1F", &cmd));
+    TEST_ASSERT_EQUAL(FX5_DEV_W, cmd.device);
+    TEST_ASSERT_EQUAL_UINT32(0x10u, cmd.start_address);
+    TEST_ASSERT_EQUAL_UINT16(0x10u, cmd.count);
+
+    TEST_ASSERT_TRUE(fx5_client_parse_command("get SM400-401", &cmd));
+    TEST_ASSERT_EQUAL(FX5_DEV_SM, cmd.device);
+    TEST_ASSERT_EQUAL_UINT32(400u, cmd.start_address);
+    TEST_ASSERT_EQUAL_UINT16(2u, cmd.count);
+}
+
 void test_client_parser_rejects_mixed_device_range(void)
 {
     fx5_client_command_t cmd;

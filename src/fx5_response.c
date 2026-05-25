@@ -178,18 +178,33 @@ fx5_status_t fx5_parse_bit_response_payload(
     if (context == NULL || rx_buffer == NULL) return FX5_ST_ERR_NULL;
 
     uint16_t remaining_bytes = 0u;
+    const uint16_t requested_count = context->count;
+    const uint16_t expected_payload_size = (uint16_t)((requested_count + 1u) / 2u);
+
+    if (requested_count == 0u || requested_count > FX5_MAX_VALUE_COUNT) {
+        if (payload_size > 0u) {
+            fx5_ringbuf_drop_front(rx_buffer, payload_size);
+        }
+        return FX5_ST_ERR_INVALID_COUNT;
+    }
+
+    if (payload_size < expected_payload_size) {
+        if (payload_size > 0u) {
+            fx5_ringbuf_drop_front(rx_buffer, payload_size);
+        }
+        return FX5_ST_ERR_INVALID_COUNT;
+    }
 
     context->count = fx5_unpack_bitunit_bytes(
         rx_buffer,
         payload_size,
         context->values,
-        FX5_MAX_VALUE_COUNT,
+        requested_count,
         &remaining_bytes
         );
 
     if (remaining_bytes > 0u) {
         fx5_ringbuf_drop_front(rx_buffer, remaining_bytes);
-        return FX5_ST_ERR_INVALID_COUNT;
     }
 
     return FX5_ST_OK;

@@ -155,6 +155,11 @@ bool fx5_client_app_execute_command(
         app->config
     );
     if (st != FX5_ST_OK) {
+        if (st == FX5_ST_ERR_UNSUPPORTED) {
+            fprintf(stderr, "ERR: unsupported command or device\n");
+            return false;
+        }
+
         fprintf(stderr, "ERR: apply failed (%d)\n", (int)st);
         return false;
     }

@@ -83,8 +83,10 @@ set M51-56=true,false,true,false,true,true
 ### Supported Devices
 
 ```
-word: D
-bit : M, X, Y
+bit       : M, X, Y, L, F, S, B
+word      : D, W
+read-only : SM, SD, SB, SW
+addressing: X/Y octal, B/W/SB/SW hex, others decimal
 ```
 
 ### Runtime

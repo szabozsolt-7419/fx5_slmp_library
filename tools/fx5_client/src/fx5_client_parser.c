@@ -5,6 +5,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct fx5_client_device_descriptor {
+    const char *name;
+    fx5_device_t device;
+    unsigned base;
+} fx5_client_device_descriptor_t;
+
+static const fx5_client_device_descriptor_t FX5_CLIENT_DEVICE_DESCRIPTORS[] = {
+    { "SM", FX5_DEV_SM, 10u },
+    { "SD", FX5_DEV_SD, 10u },
+    { "SB", FX5_DEV_SB, 16u },
+    { "SW", FX5_DEV_SW, 16u },
+    { "D",  FX5_DEV_D,  10u },
+    { "M",  FX5_DEV_M,  10u },
+    { "X",  FX5_DEV_X,  8u  },
+    { "Y",  FX5_DEV_Y,  8u  },
+    { "L",  FX5_DEV_L,  10u },
+    { "F",  FX5_DEV_F,  10u },
+    { "S",  FX5_DEV_S,  10u },
+    { "B",  FX5_DEV_B,  16u },
+    { "W",  FX5_DEV_W,  16u }
+};
+
 static void fx5_client_command_init(fx5_client_command_t *cmd)
 {
     if (cmd == NULL) {
@@ -45,6 +67,80 @@ static bool fx5_client_parse_bool_word(const char *text, bool *out_value, size_t
     return false;
 }
 
+static bool fx5_client_device_is_bit(fx5_device_t device)
+{
+    switch (device) {
+        case FX5_DEV_M:
+        case FX5_DEV_SM:
+        case FX5_DEV_L:
+        case FX5_DEV_F:
+        case FX5_DEV_S:
+        case FX5_DEV_X:
+        case FX5_DEV_Y:
+        case FX5_DEV_B:
+        case FX5_DEV_SB:
+            return true;
+        case FX5_DEV_D:
+        case FX5_DEV_SD:
+        case FX5_DEV_W:
+        case FX5_DEV_SW:
+        default:
+            return false;
+    }
+}
+
+static bool fx5_client_parse_uint32_cursor_base(
+    const char **text,
+    unsigned base,
+    uint32_t *out_value
+    )
+{
+    const char *s = NULL;
+    char *endptr = NULL;
+    unsigned long value = 0u;
+
+    if (text == NULL || *text == NULL || out_value == NULL) {
+        return false;
+    }
+
+    s = *text;
+    if (!isxdigit((unsigned char)*s)) {
+        return false;
+    }
+
+    value = strtoul(s, &endptr, (int)base);
+    if (endptr == s) {
+        return false;
+    }
+
+    *out_value = (uint32_t)value;
+    *text = endptr;
+    return true;
+}
+
+static const fx5_client_device_descriptor_t *fx5_client_parse_device_prefix(
+    const char **p
+    )
+{
+    size_t i = 0u;
+
+    if (p == NULL || *p == NULL) {
+        return NULL;
+    }
+
+    for (i = 0u; i < sizeof(FX5_CLIENT_DEVICE_DESCRIPTORS) / sizeof(FX5_CLIENT_DEVICE_DESCRIPTORS[0]); ++i) {
+        const fx5_client_device_descriptor_t *desc = &FX5_CLIENT_DEVICE_DESCRIPTORS[i];
+        const size_t len = strlen(desc->name);
+
+        if (strncmp(*p, desc->name, len) == 0) {
+            *p += len;
+            return desc;
+        }
+    }
+
+    return NULL;
+}
+
 static bool fx5_client_parse_device_and_range(
     const char **p,
     fx5_device_t *out_device,
@@ -56,6 +152,7 @@ static bool fx5_client_parse_device_and_range(
     uint32_t start = 0u;
     uint32_t end = 0u;
     fx5_device_t device = 0;
+    const fx5_client_device_descriptor_t *desc = NULL;
 
     if (p == NULL || *p == NULL || out_device == NULL || out_start == NULL || out_count == NULL) {
         return false;
@@ -66,18 +163,14 @@ static bool fx5_client_parse_device_and_range(
         return false;
     }
 
-    switch (*s) {
-        case 'D': device = FX5_DEV_D; break;
-        case 'M': device = FX5_DEV_M; break;
-        case 'X': device = FX5_DEV_X; break;
-        case 'Y': device = FX5_DEV_Y; break;
-        default:
-            return false;
+    desc = fx5_client_parse_device_prefix(&s);
+    if (desc == NULL) {
+        return false;
     }
 
-    ++s;
+    device = desc->device;
 
-    if (!fx5_client_parse_uint32_cursor(&s, &start)) {
+    if (!fx5_client_parse_uint32_cursor_base(&s, desc->base, &start)) {
         return false;
     }
 
@@ -87,26 +180,15 @@ static bool fx5_client_parse_device_and_range(
         ++s;
         s = fx5_client_skip_spaces(s);
 
-        if (*s == 'D' || *s == 'M' || *s == 'X' || *s == 'Y') {
-            fx5_device_t end_device = 0;
+        if (isalpha((unsigned char)*s)) {
+            const fx5_client_device_descriptor_t *end_desc = fx5_client_parse_device_prefix(&s);
 
-            switch (*s) {
-                case 'D': end_device = FX5_DEV_D; break;
-                case 'M': end_device = FX5_DEV_M; break;
-                case 'X': end_device = FX5_DEV_X; break;
-                case 'Y': end_device = FX5_DEV_Y; break;
-                default:
-                    return false;
-            }
-
-            if (end_device != device) {
+            if (end_desc == NULL || end_desc->device != device) {
                 return false;
             }
-
-            ++s;
         }
 
-        if (!fx5_client_parse_uint32_cursor(&s, &end)) {
+        if (!fx5_client_parse_uint32_cursor_base(&s, desc->base, &end)) {
             return false;
         }
 
@@ -147,7 +229,7 @@ static bool fx5_client_parse_scalar_or_list(
         return false;
     }
 
-    if (device == FX5_DEV_M || device == FX5_DEV_X || device == FX5_DEV_Y) {
+    if (fx5_client_device_is_bit(device)) {
         size_t len = 0u;
         bool b = false;
         const char *after_bool = p;
@@ -179,7 +261,7 @@ static bool fx5_client_parse_scalar_or_list(
             return false;
         }
 
-        if ((device == FX5_DEV_M || device == FX5_DEV_X || device == FX5_DEV_Y) &&
+        if (fx5_client_device_is_bit(device) &&
             fx5_client_parse_bool_word(p, &b, &bool_len)) {
             cmd->values[count++] = b ? 1u : 0u;
             p += bool_len;

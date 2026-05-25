@@ -78,6 +78,38 @@ void test_build_request_rejects_too_small_output_buffer(void)
     TEST_ASSERT_EQUAL(FX5_ST_ERR_TOO_SMALL, st); 
 }
 
+void test_build_request_accepts_extended_fx5_devices(void)
+{
+    static const fx5_device_t devices[] = {
+        FX5_DEV_L,
+        FX5_DEV_F,
+        FX5_DEV_S,
+        FX5_DEV_B,
+        FX5_DEV_W,
+        FX5_DEV_SM,
+        FX5_DEV_SD,
+        FX5_DEV_SB,
+        FX5_DEV_SW
+    };
+    uint8_t buf[FX5_MAX_REQUEST_SIZE];
+    uint16_t actual_size = 0u;
+    fx5_network_settings_t net;
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    make_default_3e_settings(&net);
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_network_settings(g_ctx, &net));
+
+    for (size_t i = 0u; i < sizeof(devices) / sizeof(devices[0]); ++i) {
+        TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_reset(g_ctx));
+        TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_set_network_settings(g_ctx, &net));
+        TEST_ASSERT_EQUAL(FX5_ST_OK,
+                          fx5_set_request(g_ctx, FX5_CMD_BATCH_READ, devices[i], 0u, 1u));
+        TEST_ASSERT_EQUAL(FX5_ST_OK,
+                          fx5_build_request(g_ctx, buf, (uint16_t)sizeof(buf), &actual_size));
+    }
+}
+
 void test_parse_response_returns_error_on_nonzero_end_code(void)
 {    
     fx5_status_t st;
@@ -112,6 +144,39 @@ void test_parse_response_returns_error_on_nonzero_end_code(void)
     TEST_ASSERT_EQUAL(FX5_ST_RESPONSE_ERROR, st);
     TEST_ASSERT_EQUAL_HEX16(0xC051u, fx5_get_response_code(g_ctx));
 
+}
+
+void test_parse_bit_response_keeps_requested_odd_count(void)
+{
+    static const uint8_t read_one_bit_3e[] = {
+        0xD0, 0x00,
+        0x00,
+        0xFF,
+        0xFF, 0x03,
+        0x00,
+        0x03, 0x00,
+        0x00, 0x00,
+        0x10
+    };
+
+    TEST_ASSERT_NOT_NULL(g_ctx);
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_set_request(g_ctx, FX5_CMD_BATCH_READ, FX5_DEV_M, 100u, 1u));
+
+    TEST_ASSERT_EQUAL(FX5_ST_OK,
+                      fx5_feed_response_bytes(g_ctx,
+                                              read_one_bit_3e,
+                                              (uint16_t)sizeof(read_one_bit_3e)));
+    TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_parse_response(g_ctx));
+    TEST_ASSERT_EQUAL_UINT16(1u, fx5_get_response_count(g_ctx));
+
+    {
+        uint16_t value = 0u;
+        TEST_ASSERT_EQUAL(FX5_ST_OK, fx5_get_response_value(g_ctx, 0u, &value));
+        TEST_ASSERT_EQUAL_UINT16(FX5_BIT_TRUE, value);
+        TEST_ASSERT_EQUAL(FX5_ST_ERR_INVALID_INDEX, fx5_get_response_value(g_ctx, 1u, &value));
+    }
 }
 
 void test_parse_response_resync_limit_exceeded(void)

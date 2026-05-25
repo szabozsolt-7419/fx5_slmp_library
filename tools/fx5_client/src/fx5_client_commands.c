@@ -9,7 +9,32 @@ static const char *fx5_client_device_name(fx5_device_t device)
         case FX5_DEV_M: return "M";
         case FX5_DEV_X: return "X";
         case FX5_DEV_Y: return "Y";
+        case FX5_DEV_L: return "L";
+        case FX5_DEV_F: return "F";
+        case FX5_DEV_S: return "S";
+        case FX5_DEV_B: return "B";
+        case FX5_DEV_W: return "W";
+        case FX5_DEV_SM: return "SM";
+        case FX5_DEV_SD: return "SD";
+        case FX5_DEV_SB: return "SB";
+        case FX5_DEV_SW: return "SW";
         default: return "?";
+    }
+}
+
+static unsigned fx5_client_device_address_base(fx5_device_t device)
+{
+    switch (device) {
+        case FX5_DEV_X:
+        case FX5_DEV_Y:
+            return 8u;
+        case FX5_DEV_B:
+        case FX5_DEV_W:
+        case FX5_DEV_SB:
+        case FX5_DEV_SW:
+            return 16u;
+        default:
+            return 10u;
     }
 }
 
@@ -17,12 +42,47 @@ static bool fx5_client_is_bit_device(fx5_device_t device)
 {
     switch (device) {
         case FX5_DEV_M:
+        case FX5_DEV_SM:
+        case FX5_DEV_L:
+        case FX5_DEV_F:
+        case FX5_DEV_S:
         case FX5_DEV_X:
         case FX5_DEV_Y:
+        case FX5_DEV_B:
+        case FX5_DEV_SB:
             return true;
         case FX5_DEV_D:
+        case FX5_DEV_SD:
+        case FX5_DEV_W:
+        case FX5_DEV_SW:
         default:
             return false;
+    }
+}
+
+static bool fx5_client_device_allows_write(fx5_device_t device)
+{
+    switch (device) {
+        case FX5_DEV_SM:
+        case FX5_DEV_SD:
+        case FX5_DEV_SB:
+        case FX5_DEV_SW:
+            return false;
+        default:
+            return true;
+    }
+}
+
+static void fx5_client_print_device_address(FILE *stream, fx5_device_t device, uint32_t address)
+{
+    const unsigned base = fx5_client_device_address_base(device);
+
+    if (base == 16u) {
+        fprintf(stream, "%s%lX", fx5_client_device_name(device), (unsigned long)address);
+    } else if (base == 8u) {
+        fprintf(stream, "%s%lo", fx5_client_device_name(device), (unsigned long)address);
+    } else {
+        fprintf(stream, "%s%lu", fx5_client_device_name(device), (unsigned long)address);
     }
 }
 
@@ -51,6 +111,10 @@ fx5_status_t fx5_client_apply_command_to_context(
 
     if (!fx5_client_command_needs_plc_io(cmd)) {
         return FX5_ST_ERR_STATE;
+    }
+
+    if (cmd->type == FX5_CLIENT_CMD_SET && !fx5_client_device_allows_write(cmd->device)) {
+        return FX5_ST_ERR_UNSUPPORTED;
     }
 
     st = fx5_reset(ctx);
@@ -136,17 +200,11 @@ void fx5_client_print_response(
         }
 
         if (fx5_client_is_bit_device(cmd->device)) {
-            fprintf(stream,
-                    "%s%lu=%s\n",
-                    fx5_client_device_name(cmd->device),
-                    (unsigned long)(cmd->start_address + i),
-                    (value != 0u) ? "true" : "false");
+            fx5_client_print_device_address(stream, cmd->device, cmd->start_address + i);
+            fprintf(stream, "=%s\n", (value != 0u) ? "true" : "false");
         } else {
-            fprintf(stream,
-                    "%s%lu=%u\n",
-                    fx5_client_device_name(cmd->device),
-                    (unsigned long)(cmd->start_address + i),
-                    (unsigned)value);
+            fx5_client_print_device_address(stream, cmd->device, cmd->start_address + i);
+            fprintf(stream, "=%u\n", (unsigned)value);
         }
     }
 }

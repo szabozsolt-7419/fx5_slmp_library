@@ -30,8 +30,10 @@ static void fx5_client_print_help(void)
     printf("  set M51-56=true,false,true,false,true,true\n");
     printf("\n");
     printf("Supported devices:\n");
-    printf("  word: D\n");
-    printf("  bit : M, X, Y\n");
+    printf("  bit       : M, X, Y, L, F, S, B\n");
+    printf("  word      : D, W\n");
+    printf("  read-only : SM, SD, SB, SW\n");
+    printf("  addressing: X/Y octal, B/W/SB/SW hex, others decimal\n");
 }
 
 int fx5_client_repl_run(fx5_client_app_t *app)
