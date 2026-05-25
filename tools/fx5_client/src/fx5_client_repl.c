@@ -21,13 +21,13 @@ static void fx5_client_print_help(void)
     printf("  header 3e\n");
     printf("  header 4e\n");
     printf("  get D100\n");
-    printf("  get D100-D110\n");
-    printf("  get M51-M60\n");
+    printf("  get D100-110\n");
+    printf("  get M51-60\n");
     printf("  set D100=55\n");
-    printf("  set D88-D92=33,34,35,36,37\n");
+    printf("  set D88-92=33,34,35,36,37\n");
     printf("  set M51=true\n");
-    printf("  set M51-M60=true\n");
-    printf("  set M51-M56=true,false,true,false,true,true\n");
+    printf("  set M51-60=true\n");
+    printf("  set M51-56=true,false,true,false,true,true\n");
 }
 
 int fx5_client_repl_run(fx5_client_app_t *app)

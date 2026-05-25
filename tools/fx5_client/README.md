@@ -66,18 +66,18 @@ help
 
 ```
 get D100
-get D100-D110
-get M51-M60
+get D100-110
+get M51-60
 ```
 
 ### Write
 
 ```
 set D100=55
-set D88-D92=33,34,35,36,37
+set D88-92=33,34,35,36,37
 set M51=true
-set M51-M60=true
-set M51-M56=true,false,true,false,true,true
+set M51-60=true
+set M51-56=true,false,true,false,true,true
 ```
 
 ### Runtime

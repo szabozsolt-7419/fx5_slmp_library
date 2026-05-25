@@ -87,6 +87,25 @@ static bool fx5_client_parse_device_and_range(
         ++s;
         s = fx5_client_skip_spaces(s);
 
+        if (*s == 'D' || *s == 'M' || *s == 'X' || *s == 'Y') {
+            fx5_device_t end_device = 0;
+
+            switch (*s) {
+                case 'D': end_device = FX5_DEV_D; break;
+                case 'M': end_device = FX5_DEV_M; break;
+                case 'X': end_device = FX5_DEV_X; break;
+                case 'Y': end_device = FX5_DEV_Y; break;
+                default:
+                    return false;
+            }
+
+            if (end_device != device) {
+                return false;
+            }
+
+            ++s;
+        }
+
         if (!fx5_client_parse_uint32_cursor(&s, &end)) {
             return false;
         }
@@ -131,23 +150,23 @@ static bool fx5_client_parse_scalar_or_list(
     if (device == FX5_DEV_M || device == FX5_DEV_X || device == FX5_DEV_Y) {
         size_t len = 0u;
         bool b = false;
+        const char *after_bool = p;
 
-        if (fx5_client_parse_bool_word(p, &b, &len)) {
-            p += len;
-            p = fx5_client_skip_spaces(p);
-            if (*p != '\0') {
-                return false;
+        if (fx5_client_parse_bool_word(after_bool, &b, &len)) {
+            after_bool += len;
+            after_bool = fx5_client_skip_spaces(after_bool);
+
+            if (*after_bool == '\0') {
+                cmd->has_scalar_value = true;
+                cmd->bool_value = b;
+                cmd->value_count = expected_count;
+
+                for (count = 0u; count < expected_count; ++count) {
+                    cmd->values[count] = b ? 1u : 0u;
+                }
+
+                return true;
             }
-
-            cmd->has_scalar_value = true;
-            cmd->bool_value = b;
-            cmd->value_count = expected_count;
-
-            for (count = 0u; count < expected_count; ++count) {
-                cmd->values[count] = b ? 1u : 0u;
-            }
-
-            return true;
         }
     }
 

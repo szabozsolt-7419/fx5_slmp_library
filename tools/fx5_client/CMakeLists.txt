@@ -23,6 +23,12 @@ target_sources(fx5_client PRIVATE
     config/fx5_client.ini
 )
 
+add_custom_command(TARGET fx5_client POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/config/fx5_client.ini
+        $<TARGET_FILE_DIR:fx5_client>/fx5_client.ini
+)
+
 target_compile_definitions(fx5_client
     PRIVATE
         FX5_CLIENT_VERSION_STRING="${PROJECT_VERSION}"

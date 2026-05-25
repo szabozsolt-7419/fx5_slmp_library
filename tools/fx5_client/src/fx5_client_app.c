@@ -64,6 +64,10 @@ static bool fx5_client_receive_response(fx5_client_app_t *app)
                 continue;
             }
 
+            if (st == FX5_ST_RESPONSE_ERROR) {
+                return true;
+            }
+
             if (st != FX5_ST_OK) {
                 fprintf(stderr, "ERR: parse response failed (%d)\n", (int)st);
                 return false;

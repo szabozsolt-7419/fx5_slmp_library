@@ -51,13 +51,17 @@ add_executable(fx5_tests
   tests/unity/unity_internals.h
   tests/test_fx5_parser_vectors.c
   tests/test_fx5_edge_cases.c
+  tests/test_fx5_client_parser.c
   tests/test_support.h
+  tools/fx5_client/src/fx5_client_parser.c
+  tools/fx5_client/src/fx5_client_utility.c
 
 )
 
 target_include_directories(fx5_tests
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools/fx5_client/include
     ${CMAKE_CURRENT_SOURCE_DIR}/tests
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unity
 )
